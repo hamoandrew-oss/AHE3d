@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0c245b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="AH Terra" />
+  <title>Andrew Hamilton Engineering — Terra Viewer</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="assets/logo.jpg" />
+  <link href="https://cdn.jsdelivr.net/npm/cesium@1.132.0/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <button class="icon-btn mobile-only" id="backBtn" aria-label="Back" hidden>‹</button>
+      <div class="brand">
+        <img src="assets/logo.jpg" alt="Andrew Hamilton Engineering logo" />
+        <div>
+          <strong>Terra Viewer</strong>
+          <span>Andrew Hamilton Engineering</span>
+        </div>
+      </div>
+      <button class="icon-btn" id="settingsBtn" aria-label="Settings">⚙︎</button>
+    </header>
+
+    <main>
+      <section id="homeView" class="view active">
+        <div class="hero-card">
+          <div>
+            <p class="eyebrow">DJI TERRA • 3D TILES</p>
+            <h1>Your survey models, in your pocket.</h1>
+            <p>Save multiple projects and open DJI Terra <code>tileset.json</code> / <code>.b3dm</code> models directly in Safari on iPhone.</p>
+          </div>
+          <button class="primary-btn" id="addProjectBtn">＋ Add project</button>
+        </div>
+
+        <div class="section-heading">
+          <div>
+            <h2>Projects</h2>
+            <p id="projectCount">0 projects</p>
+          </div>
+        </div>
+        <div id="emptyState" class="empty-state">
+          <div class="empty-icon">3D</div>
+          <h3>No projects yet</h3>
+          <p>Add a project and point it to the <code>tileset.json</code> file exported with your DJI Terra model.</p>
+          <button class="secondary-btn" id="emptyAddBtn">Add first project</button>
+        </div>
+        <div id="projectGrid" class="project-grid"></div>
+      </section>
+
+      <section id="viewerView" class="view viewer-view">
+        <div id="cesiumContainer"></div>
+        <div class="viewer-overlay top-left">
+          <div class="model-title-card">
+            <span class="status-dot"></span>
+            <div>
+              <strong id="viewerProjectName">Project</strong>
+              <small id="viewerProjectMeta">DJI Terra 3D Tiles</small>
+            </div>
+          </div>
+        </div>
+        <div class="viewer-overlay bottom-center">
+          <div class="viewer-toolbar">
+            <button id="homeModelBtn" title="Fit model">⌂<span>Fit</span></button>
+            <button id="wireframeBtn" title="Toggle wireframe">◇<span>Edges</span></button>
+            <button id="fullscreenBtn" title="Fullscreen">⛶<span>Full</span></button>
+          </div>
+        </div>
+        <div id="loadingModel" class="model-loading"><div class="spinner"></div><span>Loading model…</span></div>
+        <div id="modelError" class="model-error" hidden></div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" id="bottomNav">
+      <button class="nav-item active" data-view="home"><span>⌂</span>Projects</button>
+      <button class="nav-item" id="navAdd"><span>＋</span>Add</button>
+      <button class="nav-item" data-view="settings"><span>⚙︎</span>Settings</button>
+    </nav>
+  </div>
+
+  <dialog id="projectDialog" class="sheet-dialog">
+    <form method="dialog" id="projectForm">
+      <div class="sheet-handle"></div>
+      <div class="dialog-header">
+        <div><p class="eyebrow">NEW MODEL</p><h2>Add project</h2></div>
+        <button type="button" class="icon-btn" data-close="projectDialog">×</button>
+      </div>
+      <label>Project name<input id="projectName" required maxlength="60" placeholder="e.g. Crossaig Earthworks" /></label>
+      <label>Tileset URL<input id="tilesetUrl" required type="url" inputmode="url" placeholder="https://example.com/model/tileset.json" /></label>
+      <label>Location / note<input id="projectNote" maxlength="80" placeholder="Optional" /></label>
+      <div class="info-box"><strong>DJI Terra tip</strong><span>Upload the complete 3D Tiles export folder to a web host. Keep <code>tileset.json</code> and all referenced <code>.b3dm</code> files in their original folder structure.</span></div>
+      <button class="primary-btn full" type="submit">Save project</button>
+    </form>
+  </dialog>
+
+  <dialog id="settingsDialog" class="sheet-dialog">
+    <div class="sheet-content">
+      <div class="sheet-handle"></div>
+      <div class="dialog-header">
+        <div><p class="eyebrow">PREFERENCES</p><h2>Settings</h2></div>
+        <button type="button" class="icon-btn" data-close="settingsDialog">×</button>
+      </div>
+      <div class="setting-row">
+        <div><strong>Appearance</strong><span>Choose how the app looks.</span></div>
+        <select id="themeSelect"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select>
+      </div>
+      <div class="setting-row">
+        <div><strong>High quality</strong><span>Sharper model rendering; may use more battery.</span></div>
+        <label class="switch"><input id="qualityToggle" type="checkbox" checked><span></span></label>
+      </div>
+      <div class="setting-row">
+        <div><strong>Show FPS</strong><span>Useful for checking iPhone performance.</span></div>
+        <label class="switch"><input id="fpsToggle" type="checkbox"><span></span></label>
+      </div>
+      <div class="about-card">
+        <img src="assets/logo.jpg" alt="" />
+        <div><strong>AH Terra Viewer</strong><span>Built for DJI Terra 3D Tiles / B3DM models.</span></div>
+      </div>
+    </div>
+  </dialog>
+
+  <template id="projectCardTemplate">
+    <article class="project-card">
+      <button class="project-open">
+        <div class="project-thumb"><span>3D</span><div class="grid-lines"></div></div>
+        <div class="project-info"><div><h3></h3><p></p></div><span class="chev">›</span></div>
+      </button>
+      <div class="card-actions"><small></small><button class="delete-btn" title="Delete project">Delete</button></div>
+    </article>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/cesium@1.132.0/Build/Cesium/Cesium.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

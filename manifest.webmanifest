@@ -1,0 +1,9 @@
+{
+  "name": "Andrew Hamilton Engineering Terra Viewer",
+  "short_name": "AH Terra",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#071020",
+  "theme_color": "#102b66",
+  "icons": [{"src":"assets/logo.jpg","sizes":"1024x1024","type":"image/jpeg","purpose":"any maskable"}]
+}
